@@ -1,0 +1,5 @@
+.env
+.venv
+pipfile
+pipfile.lock
+migrations/versions
