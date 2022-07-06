@@ -2,7 +2,7 @@ from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.settings import database as db_conf
+from settings import database as db_conf
 
 db_url = (
         f'{db_conf.db_driver}://'

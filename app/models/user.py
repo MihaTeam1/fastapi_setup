@@ -7,7 +7,7 @@ from .base import ModelBase, UUIDModelBase
 class User(UUIDModelBase, table=True):
     __tablename__ = 'users'
 
-    name: str = Field(sa_column=Column(
+    username: str = Field(sa_column=Column(
                 'name',
                 String,
                 unique=True,

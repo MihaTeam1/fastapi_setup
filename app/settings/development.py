@@ -1,7 +1,7 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware import Middleware
 
-from app.models.utils import Database
+from models.utils import Database
 
 origins = [
     'http://localhost',
