@@ -1,7 +1,6 @@
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
-@dataclass
-class Database:
+class Database(BaseModel):
     db_driver: str
     db_user: str
     db_pass: str

@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(Path(__file__).parent.parent.parent, '.env'))
+load_dotenv(os.path.join(Path(__file__).parent.parent.parent, '.env.dev'))
 
 module = os.environ.get("SETTINGS_MODULE")
 
@@ -12,3 +12,4 @@ if module == 'production':
     from .production import *
 else:
     from .development import *
+    settings = dict(settings, **dev_settings)

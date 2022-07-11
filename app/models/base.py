@@ -16,16 +16,15 @@ class ModelBase(SQLModel):
                 nullable=False,
             )
     updated_at: Optional[datetime] = Field(sa_column=Column(
-                DateTime,
+                DateTime(timezone=True),
                 nullable=False,
                 server_default=func.now(),
-                server_onupdate=func.now(),
-            )),
+                onupdate=func.now(),
+            ))
     created_at: Optional[datetime] = Field(sa_column=Column(
-                DateTime,
+                DateTime(timezone=True),
                 nullable=False,
                 server_default=func.now(),
-                server_onupdate=func.now(),
             ))
 
 class UUIDModelBase(ModelBase):

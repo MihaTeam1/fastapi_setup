@@ -1,4 +1,6 @@
 import argparse
+from abc import abstractmethod
+
 
 class AutoRegister(type):
     def __new__(mcs, name, bases, classdict):
@@ -32,12 +34,13 @@ class BaseCommand(metaclass=AutoRegister):
         return klass._subclasses
 
     @classmethod
-    def get_parser(cls, *args, **kwargs) -> argparse.ArgumentParser:
+    def get_parser(cls) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(description=cls.description)
         cls.add_arguments(parser)
         return parser
 
     @classmethod
+    @abstractmethod
     def handler(cls, **options) -> None:
         raise NotImplementedError('handler must be implemented')
 
