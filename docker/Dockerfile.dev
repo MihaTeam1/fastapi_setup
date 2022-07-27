@@ -9,6 +9,8 @@ RUN pip install -r dev-requirements.txt
 COPY app ./app/
 COPY migrations ./migrations/
 COPY alembic.ini ./
+COPY pytest.ini ./
 COPY ./docker/gunicorn.config.py .
+ENV PYTHONPATH="$PYTHONPATH:/app"
 
-CMD gunicorn -c "gunicorn.config.py" app.main:app
+CMD alembic upgrade head

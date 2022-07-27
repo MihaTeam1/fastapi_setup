@@ -1,11 +1,13 @@
 from typing import List, Type, Optional
 from passlib.context import CryptContext
 
-from utils.validators.password import *
+from utils.validators.password import BasePasswordValidator
 from exceptions.exceptions import ValidationError
-import settings
+from settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SEED = getattr(settings, 'secret_key')
+
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
@@ -22,7 +24,7 @@ def get_default_validators() -> List[Type[BasePasswordValidator]]:
 def validate_password(
             password: str,
             validators: List[Type[BasePasswordValidator]] | None = None,
-            username: Optional[str] = None,
+            **kwargs,
         ) -> None:
     if not validators:
         validators = get_default_validators()
@@ -30,16 +32,16 @@ def validate_password(
     error = ValidationError([])
     for validator in validators:
         try:
-            if username and hasattr(validator, 'username'):
-                validator.username = username
-            validator(password=password)
+            validator(password=password, **kwargs)
         except ValidationError as err:
-            error = ValidationError({'password':[err, error]})
+            error = ValidationError({'password': [err, error]})
 
     if error.has_errors:
         raise error
 
 
-def compare_passwords(password1: str, password2: str) -> None:
-    if password1 != password2:
-        raise ValidationError({'password': 'Passwords are not equal'})
+def generate_password(base: str, seed: str = SEED, **kwargs) -> str:
+    validators = get_default_validators()
+    for validator in validators:
+        base = validator.generate_password(base=base, seed=seed, **kwargs)
+    return base

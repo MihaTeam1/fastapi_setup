@@ -4,7 +4,7 @@ from utils.hash import make_hash
 
 
 class ValidationError(Exception):
-    def __init__(self, message, code=None, params=None):
+    def __init__(self, message, code=None, params=None, headers={}):
         super().__init__(message, code, params)
 
         if isinstance(message, ValidationError):
@@ -14,6 +14,13 @@ class ValidationError(Exception):
                 message = message.error_list
             else:
                 message, code, params = message.message, message.code, message.params
+
+            if hasattr(message, 'headers'):
+                keys = set(message.headers.keys()) & set(headers.keys())
+                if keys:
+                    for key in keys:
+                        headers[key] = str(headers[key]) + str(message.headers[key])
+                headers = dict(message.headers, **headers)
 
         if isinstance(message, dict):
             self.error_dict = {}
@@ -36,6 +43,7 @@ class ValidationError(Exception):
             self.message = message
             self.code = code
             self.params = params
+            self.headers = headers
             self.error_list = [self]
 
     @property

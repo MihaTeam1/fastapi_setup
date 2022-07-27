@@ -1,31 +1,31 @@
 from datetime import timedelta
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy.future import select
 from typing import Optional
+import logging
 
 import settings
-from models.user import User, UserCreate
+from schemas.user import UserCreate, UserChangePassword, UserLogin, User
 from exceptions.exceptions import ValidationError
-from .token import decode_access_token, create_access_token
-from .password import verify_password, validate_password, compare_passwords, get_password_hash
+from schemas.token import ResponseToken
+from db import get_session
+from .token import decode_access_token, create_access_token, oauth2_scheme, create_refresh_token
+from .password import verify_password, validate_password, get_password_hash
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = getattr(settings, 'ACCESS_TOKEN_EXPIRE_MINUTES')
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+logger = logging.getLogger(__name__)
 
 
 async def get_user_by_username(username: str, session: Optional[AsyncSession] = None) -> User | None:
     qs = select(User).where(User.username == username).limit(1)
     user = await session.execute(qs)
-    user = user.one_or_none()
+    user = user.scalars().one()
     if not user:
         return None
-    user = user.User
     return user
 
 
@@ -40,11 +40,11 @@ async def create_user(
         raise AttributeError("If commit = True you should pass session")
     error = ValidationError([])
     try:
-        validate_password(user.password, username=user.username)
-    except ValidationError as err:
-        error = ValidationError([error, err])
-    try:
-        compare_passwords(user.password, user.password2)
+        validate_password(
+            user.password,
+            username=user.username,
+            confirm_password=user.confirm_password
+        )
     except ValidationError as err:
         error = ValidationError({'password': [err, error]})
     if error.has_errors:
@@ -59,7 +59,8 @@ async def create_user(
         await session.refresh(user)
     return user
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+
+async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -72,7 +73,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user_by_username(username=username)
+    user = await get_user_by_username(username=username, session=session)
     if user is None:
         raise credentials_exception
     return user
@@ -84,21 +85,51 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
-async def authenticate_user(username: str, password: str):
-    user = await get_user(username=username)
-    if not user:
-        return False
-    if not verify_password(password, user.password):
-        return False
+async def authenticate_user(username: str, password: str, session: AsyncSession):
+    user = await session.execute(select(User).where(User.username == username))
+    user = user.scalars().one_or_none()
+    if not user or not verify_password(password, user.password):
+        raise ValidationError('Invalid username or password', headers={"WWW-Authenticate": "Bearer"})
     return user
 
 
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await authenticate_user(form_data.username, form_data.password)
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+async def login_for_access_token(
+        user: UserLogin,
+        session: AsyncSession) -> ResponseToken:
+    user = await authenticate_user(user.username, user.password, session)
     access_token = create_access_token(
-        data={'sub': user.username}, expires_delta=access_token_expires
+        data={'sub': user.username}
+    )
+    refresh_token = await create_refresh_token(
+        data={'sub': user.username},
+        user=user,
+        session=session
+    )
+    return ResponseToken(
+        access_token=access_token.token,
+        refresh_token=refresh_token.token,
+        expire_in=access_token.expire_in,
+        token_type='bearer'
     )
 
 
+async def change_password(user: User, passwords: UserChangePassword, session: AsyncSession):
+    error = ValidationError([])
+    if not verify_password(passwords.password, user.password):
+        error = ValidationError({'password': 'Password is invalid'})
+    try:
+        validate_password(
+                passwords.new_password,
+                username=user.username,
+                confirm_password=passwords.new_confirm_password
+        )
+    except ValidationError as err:
+        error = ValidationError({'new_password': [error, err]})
+    if error.has_errors:
+        raise error
+    user.password = get_password_hash(passwords.new_password)
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
 

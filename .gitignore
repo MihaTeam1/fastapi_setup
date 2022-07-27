@@ -1,9 +1,11 @@
-.env
 .venv
 pipfile
 pipfile.lock
 migrations/versions
 .idea
 data
+logs
 __pycache__
+.pytest_cache
 .DS_Store
+.env

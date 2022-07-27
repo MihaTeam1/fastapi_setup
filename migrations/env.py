@@ -13,19 +13,16 @@ from alembic import context
 
 sys.path.insert(1, str(Path(__file__).parent.parent / 'app'))
 
-from app.settings import database
+from app.settings import settings
+from models.user import User
+from models.token import Token
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, "DB_DRIVER", database.db_driver)
-config.set_section_option(section, "DB_USER", database.db_user)
-config.set_section_option(section, "DB_PASS", database.db_pass)
-config.set_section_option(section, "DB_HOST", database.db_host)
-config.set_section_option(section, "DB_PORT", database.db_port)
-config.set_section_option(section, "DB_NAME", database.db_name)
+config.set_section_option(section, "PG_DSN", settings.pg_dsn)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

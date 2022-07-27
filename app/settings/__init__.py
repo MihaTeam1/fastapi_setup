@@ -1,15 +1,17 @@
 import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-load_dotenv(os.path.join(Path(__file__).parent.parent.parent, '.env.dev'))
+from .base import Settings
 
 module = os.environ.get("SETTINGS_MODULE")
 
-from .base import *
+env = ''
 
 if module == 'production':
-    from .production import *
-else:
-    from .development import *
-    settings = dict(settings, **dev_settings)
+    from .production import Settings as AdditionalSettings
+elif module == 'development':
+    from .development import Settings as AdditionalSettings
+elif module == 'test':
+    from .test import Settings as AdditionalSettings
+
+settings = Settings(module=AdditionalSettings, _env_file=AdditionalSettings.Config.env_file)
+
+

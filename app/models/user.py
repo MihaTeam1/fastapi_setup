@@ -1,7 +1,8 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, String
+from typing import List, Optional
 
-from .base import ModelBase, UUIDModelBase
+from .base import UUIDModelBase as Base
 
 
 class UserBase(SQLModel):
@@ -12,14 +13,21 @@ class UserBase(SQLModel):
                 nullable=False,
                 index=True
             ))
-    password: str = Field(
-                nullable=False
-            )
 
 
-class User(UserBase, UUIDModelBase, table=True):
-    __tablename__ = 'users'
+class UserBaseWithPassword(UserBase):
+    password: str
+
+
+class User(UserBaseWithPassword, Base, table=True):
+    __tablename__ = 'user'
     __table_args__ = {'extend_existing': True}
+    tokens: List['Token'] = Relationship(back_populates='user')
 
-class UserCreate(UserBase):
-    password2: str
+
+
+
+
+
+
+

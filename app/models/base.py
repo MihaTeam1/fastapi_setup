@@ -8,6 +8,7 @@ from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlmodel import Field, SQLModel
 
+
 class ModelBase(SQLModel):
     id: Optional[int] = Field(
                 default=None,
@@ -26,6 +27,7 @@ class ModelBase(SQLModel):
                 nullable=False,
                 server_default=func.now(),
             ))
+
 
 class UUIDModelBase(ModelBase):
     id: uuid_pkg.UUID = Field(sa_column=Column(
