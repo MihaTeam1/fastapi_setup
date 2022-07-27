@@ -10,7 +10,7 @@ COPY app ./app/
 COPY migrations ./migrations/
 COPY alembic.ini ./
 COPY pytest.ini ./
-COPY ./docker/gunicorn.config.py .
+COPY gunicorn.config.py .
 ENV PYTHONPATH="$PYTHONPATH:/app"
 
 CMD alembic upgrade head

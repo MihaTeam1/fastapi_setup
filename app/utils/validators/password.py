@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from difflib import SequenceMatcher
 import string
+from typing import Tuple
 
 from .base import BaseValidator
 from exceptions.exceptions import ValidationError
@@ -30,6 +31,7 @@ class BasePasswordValidator(BaseValidator):
 
 class MinLengthValidator(BasePasswordValidator):
     message: str = 'Minimal password length must be equal or higher than {0}'
+    requires: Tuple[str] = ('password',)
 
     def __init__(self, min_length: int = 8):
         self.min_length = min_length
@@ -49,6 +51,7 @@ class MinLengthValidator(BasePasswordValidator):
 
 class SimilarPasswordUsernameValidator(BasePasswordValidator):
     message: str = 'Username and password too similar'
+    requires: Tuple[str] = ('password', 'username')
 
     def __init__(self, ratio: float = 0.5):
         self.ratio = ratio
@@ -72,6 +75,7 @@ class SimilarPasswordUsernameValidator(BasePasswordValidator):
 
 class ComparePasswordsValidator(BasePasswordValidator):
     message: str = 'Passwords aren\'t equal'
+    requires: Tuple[str] = ('password', 'confirm_password')
 
     def validate(self, password: str, confirm_password: str, **kwargs):
         if password != confirm_password:
@@ -84,6 +88,7 @@ class ASCIIPasswordValidator(BasePasswordValidator):
                         + string.digits \
                         + string.punctuation
     message: str = f'Password has character, which not in {alphabet}'
+    requires: Tuple[str] = ('password',)
 
     def validate(self, password: str, **kwargs):
         if set(password) - set(self.alphabet):
@@ -97,3 +102,10 @@ class ASCIIPasswordValidator(BasePasswordValidator):
             password += self.alphabet[(self.get_seed_charnum(seed, ord(char)) + last_num) % len(self.alphabet)]
             last_num = ord(char)
         return password
+
+__all__ = [
+    'MinLengthValidator',
+    'SimilarPasswordUsernameValidator',
+    'ComparePasswordsValidator',
+    'ASCIIPasswordValidator'
+]

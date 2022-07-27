@@ -5,19 +5,19 @@ services:
     image: postgres
     volumes:
       - ../data/db:/var/lib/postgresql/data
-    env_file: ../.env/dev
+    env_file: .env/dev
     ports:
       - "5433:5432"
     restart: always
   web:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile.dev
+      context: .
+      dockerfile: Dockerfile
     command: gunicorn -c "gunicorn.config.py" app.main:app
     image: fastapi_first
     ports:
       - "8001:8000"
-    env_file: ../.env/dev
+    env_file: .env/dev
     environment:
       - SETTINGS_MODULE=development
       - POSTGRES_HOST=db

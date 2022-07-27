@@ -93,7 +93,7 @@ async def test_change_password_success(client, init_db, user, token):
     response = await client.post(
         router.url_path_for('v1.change_password'),
         json={
-            'password': password,
+            'current_password': password,
             'new_password': new_password,
             'new_confirm_password': new_password,
         },
@@ -112,7 +112,7 @@ async def test_change_password_compare_fail(client, init_db, user, token):
     response = await client.post(
         router.url_path_for('v1.change_password'),
         json={
-            'password': password,
+            'current_password': password,
             'new_password': new_password,
             'new_confirm_password': new_password + '#',
         },

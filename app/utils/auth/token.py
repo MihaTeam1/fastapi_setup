@@ -19,7 +19,7 @@ ALGORITHM = getattr(settings, 'jwt_hash_algorythm')
 ACCESS_TOKEN_EXPIRE_MINUTES = getattr(settings, 'access_token_expire_minutes')
 REFRESH_TOKEN_EXPIRE_MINUTES = getattr(settings, 'refresh_token_expire_minutes')
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/login")
 
 
 def _create_token(

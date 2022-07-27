@@ -1,9 +1,12 @@
 from typing import List, Type, Optional
 from passlib.context import CryptContext
+import logging
 
 from utils.validators.password import BasePasswordValidator
 from exceptions.exceptions import ValidationError
 from settings import settings
+
+logger = logging.getLogger(__name__)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SEED = getattr(settings, 'secret_key')
@@ -18,8 +21,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def get_default_validators() -> List[Type[BasePasswordValidator]]:
-    return getattr(settings, 'PASSWORD_VALIDATORS', [])
-
+    return getattr(settings, 'password_validators', [])
 
 def validate_password(
             password: str,

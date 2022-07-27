@@ -1,20 +1,16 @@
-from datetime import timedelta
-
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import Optional
 import logging
 
-import settings
 from schemas.user import UserCreate, UserChangePassword, UserLogin, User
 from exceptions.exceptions import ValidationError
 from schemas.token import ResponseToken
 from db import get_session
 from .token import decode_access_token, create_access_token, oauth2_scheme, create_refresh_token
-from .password import verify_password, validate_password, get_password_hash
+from .password import verify_password, get_password_hash
 
 
 logger = logging.getLogger(__name__)
@@ -38,18 +34,6 @@ async def create_user(
         raise AttributeError("You should pass session or set raw = True")
     if commit and not session:
         raise AttributeError("If commit = True you should pass session")
-    error = ValidationError([])
-    try:
-        validate_password(
-            user.password,
-            username=user.username,
-            confirm_password=user.confirm_password
-        )
-    except ValidationError as err:
-        error = ValidationError({'password': [err, error]})
-    if error.has_errors:
-        raise error
-
     hashed_password = get_password_hash(user.password)
     user = User(username=user.username, password=hashed_password)
     if not raw:
@@ -114,19 +98,8 @@ async def login_for_access_token(
 
 
 async def change_password(user: User, passwords: UserChangePassword, session: AsyncSession):
-    error = ValidationError([])
-    if not verify_password(passwords.password, user.password):
-        error = ValidationError({'password': 'Password is invalid'})
-    try:
-        validate_password(
-                passwords.new_password,
-                username=user.username,
-                confirm_password=passwords.new_confirm_password
-        )
-    except ValidationError as err:
-        error = ValidationError({'new_password': [error, err]})
-    if error.has_errors:
-        raise error
+    if not verify_password(passwords.current_password, user.password):
+        raise ValidationError({'password': 'Password is invalid'})
     user.password = get_password_hash(passwords.new_password)
     session.add(user)
     await session.commit()

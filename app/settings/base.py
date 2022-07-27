@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     refresh_token_expire_minutes: int = 60*24*30
     password_validators: List[validators.password.BasePasswordValidator] = [
-            validators.password.SimilarPasswordUsernameValidator(0.5),
+            # validators.password.SimilarPasswordUsernameValidator(0.5),
             validators.password.ComparePasswordsValidator(),
             validators.password.MinLengthValidator(10),
             validators.password.ASCIIPasswordValidator(),
