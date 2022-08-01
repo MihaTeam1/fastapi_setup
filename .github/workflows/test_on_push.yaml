@@ -16,7 +16,7 @@ jobs:
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       ORIGINS: ${{ secrets.ORIGINS }}
     services:
-      db:
+      postgres:
         image: postgres
         env:
           POSTGRES_DB: ${{ secrets.POSTGRES_NAME }}
