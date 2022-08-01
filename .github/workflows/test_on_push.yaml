@@ -5,10 +5,13 @@ on:
       - '*'
 
 env:
-  TEST_ENV_FILE: ${{ secrets.TEST }}
   POSTGRES_DB: ${{ secrets.TEST.POSTGRES_NAME }}
   POSTGRES_USER: ${{ secrets.TEST.POSTGRES_USER }}
   POSTGRES_PASSWORD: ${{ secrets.TEST.POSTGRES_PASSWORD }}
+  SECRET_KEY: ${{ secrets.TEST.SECRET_KEY }}
+  PG_DSN: ${{ secrets.TEST.PG_DSN }}
+  ALLOWED_HOSTS: ${{ secrets.TEST.ALLOWED_HOSTS }}
+  ORIGINS: ${{ secrets.TEST.ORIGINS }}
 
 jobs:
   run_tests:
@@ -29,10 +32,5 @@ jobs:
       - uses: actions/checkout@master
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
-      env:
-        SECRET_KEY: ${{ secrets.TEST.SECRET_KEY }}
-        PG_DSN: ${{ secrets.TEST.PG_DSN }}
-        ALLOWED_HOSTS: ${{ secrets.TEST.ALLOWED_HOSTS }}
-        ORIGINS: ${{ secrets.TEST.ORIGINS }}
       - name: Run tests
         run: pytest
