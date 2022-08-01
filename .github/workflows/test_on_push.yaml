@@ -14,8 +14,9 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: test
+          POSTGRES_DB: ${{ secrets.POSTGRES_NAME }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -25,5 +26,10 @@ jobs:
       - uses: actions/checkout@master
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          PG_DSN: ${{ secrets.PG_DSN }}
+          ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+          ORIGINS: ${{ secrets.ORIGINS }}
       - name: Run tests
         run: pytest
