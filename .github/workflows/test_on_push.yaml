@@ -31,5 +31,7 @@ jobs:
         run: pip install -r requirements/requirements.txt
       - name: Unpack envs
         run: mkdir .env && echo $QA_ENV_FILE | base64 --decode > .env/test
+      - name: ls
+        run: cat .env/test && pwd
       - name: Run tests
         run: pytest
