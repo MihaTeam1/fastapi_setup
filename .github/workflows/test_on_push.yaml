@@ -31,5 +31,8 @@ jobs:
           PG_DSN: ${{ secrets.PG_DSN }}
           ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
           ORIGINS: ${{ secrets.ORIGINS }}
+      - run: |
+          echo 'printing envs'
+          env
       - name: Run tests
         run: pytest
