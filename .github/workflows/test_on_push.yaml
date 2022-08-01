@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - '*'
-env:
-  POSTGRES_NAME: test
 
 jobs:
   run_tests:
@@ -23,11 +21,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@master
-        env:
-          POSTGRES_DSN: postgresql+asyncpg://test:test@db:5432/test
-          SECRET_KEY: qlqoa!99p(h%0-jypb8$#fik*1iz^_6s736sivj#39nher5knd
-          ALLOWED_HOSTS: 127.0.0.1 localhost
-          ORIGINS: http://127.0.0.1 http://localhost
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
       - name: Run tests
