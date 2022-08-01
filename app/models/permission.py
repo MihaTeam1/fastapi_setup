@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class PermissionBase(SQLModel):
-    group_id: int = Field(foreign_key="user.id")
+    group_id: int = Field(foreign_key="group.id")
     perm: PermissionCRUD
     description: Optional[str]
 

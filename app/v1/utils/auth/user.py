@@ -22,13 +22,8 @@ logger = logging.getLogger(__name__)
 
 async def get_user_by_username(username: str, session: Optional[AsyncSession] = None) -> UserModel | None:
     qs = select(UserModel) \
-            .outerjoin(UserModel.permissions) \
             .where(UserModel.username == username) \
-            .limit(1) \
-            .options(
-                contains_eager(UserModel.permissions) \
-                .load_only(PermissionModel.perm)
-            )
+            .limit(1)
     user = await session.execute(qs)
     user = user.unique().scalars().fetchall()
     if not user:

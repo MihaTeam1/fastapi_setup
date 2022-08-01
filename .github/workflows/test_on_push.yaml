@@ -16,7 +16,7 @@ jobs:
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       ORIGINS: ${{ secrets.ORIGINS }}
     services:
-      postgres:
+      db:
         image: postgres
         env:
           POSTGRES_DB: ${{ secrets.POSTGRES_NAME }}
@@ -31,8 +31,5 @@ jobs:
       - uses: actions/checkout@master
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
-      - run: |
-          echo 'printing envs'
-          env
       - name: Run tests
         run: pytest
