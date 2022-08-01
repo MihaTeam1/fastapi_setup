@@ -15,6 +15,7 @@ SEED = getattr(settings, 'secret_key')
 
 
 async def test_create_user_success(client, init_db):
+    assert 0
     username = 'test'
     password = generate_password(base=username, seed=SEED, username=username)
     user = {
