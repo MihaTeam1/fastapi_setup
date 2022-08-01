@@ -8,7 +8,17 @@ from typing import List
 from utils.auth.user import create_user, login_for_access_token, get_current_user, change_password
 from utils.auth.token import refresh_token, oauth2_scheme
 from schemas.token import ResponseToken
-from schemas.user import User, UserCreate, UserChangePassword, UserReadWithTokens, UserLogin, UserBase, UserRead
+from schemas.user import (
+    User,
+    UserCreate,
+    UserChangePassword,
+    UserReadWithTokens,
+    UserLogin,
+    UserBase,
+    UserRead,
+    UserReadWithPermissions
+)
+from models.permissions import PermissionCreate
 
 from sqlalchemy import select
 
@@ -52,8 +62,8 @@ async def refresh_token_endpoint(token: str = Depends(oauth2_scheme)) -> Respons
     return await refresh_token(token)
 
 
-@router.get(path='/items/', response_model=List[UserReadWithTokens], name='v1.items')
-async def items(session: AsyncSession = Depends(get_session)):
+@router.post(path='/items/', response_model=List[UserReadWithPermissions], name='v1.items')
+async def items(perm: PermissionCreate, session: AsyncSession = Depends(get_session)):
     u = select(User).join(User.tokens).options(contains_eager(User.tokens))
     u = await session.execute(u)
     u = u.unique().scalars().fetchall()

@@ -8,8 +8,8 @@ from typing import Optional, List
 import logging
 
 from settings import settings
-from schemas.token import AccessToken, RefreshToken, ResponseToken, Token
-from models.user import User
+from schemas.token import AccessToken, RefreshToken, ResponseToken, TokenModel
+from schemas.user import UserModel
 
 
 logger = logging.getLogger(__name__)
@@ -19,8 +19,7 @@ ALGORITHM = getattr(settings, 'jwt_hash_algorythm')
 ACCESS_TOKEN_EXPIRE_MINUTES = getattr(settings, 'access_token_expire_minutes')
 REFRESH_TOKEN_EXPIRE_MINUTES = getattr(settings, 'refresh_token_expire_minutes')
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/login")
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/token/login")
 
 def _create_token(
         data: dict,
@@ -29,7 +28,7 @@ def _create_token(
     if isinstance(expires_delta, int):
         expires_delta = timedelta(minutes=expires_delta)
     expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire.timestamp()})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return {
         'token': encoded_jwt,
@@ -49,7 +48,7 @@ def create_access_token(
 
 async def create_refresh_token(
         data: dict,
-        user: User,
+        user: UserModel,
         session: AsyncSession,
         expires_delta: timedelta | int = REFRESH_TOKEN_EXPIRE_MINUTES,
         ) -> RefreshToken:
@@ -84,7 +83,12 @@ async def refresh_token(token: str):
     if not refresh:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You should send refresh token, or login"
+            detail="You should send refresh token"
+        )
+    if not expire:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Token is corrupted"
         )
     access_token = create_access_token({'sub': username})
     if expire > datetime.utcnow().timestamp() \
@@ -98,14 +102,14 @@ async def refresh_token(token: str):
     )
 
 
-async def add_token(token: str, expire_in: datetime | int, user: User, session: AsyncSession):
+async def add_token(token: str, expire_in: datetime | int, user: UserModel, session: AsyncSession):
     if isinstance(expire_in, int):
         expire_in = datetime.fromtimestamp(expire_in)
     elif isinstance(expire_in, datetime):
         pass
     else:
         raise TypeError('expire_in should be an int instance or datetime')
-    token = Token(
+    token = TokenModel(
         token=token,
         expire_in=expire_in,
         user_id=user.id,
@@ -117,7 +121,7 @@ async def add_token(token: str, expire_in: datetime | int, user: User, session: 
 
 
 async def get_token(token: str, session: AsyncSession, only_qs=False):
-    qs = select(Token).where(Token.token == token)
+    qs = select(TokenModel).where(TokenModel.token == token)
     if only_qs:
         return qs
     token = await session.execute(qs)
@@ -125,14 +129,14 @@ async def get_token(token: str, session: AsyncSession, only_qs=False):
 
 
 async def get_tokens(tokens: List[str], session: AsyncSession, only_qs=False):
-    qs = select(Token).where(Token.id.in_(tokens))
+    qs = select(TokenModel).where(TokenModel.id.in_(tokens))
     if only_qs:
         return qs
     tokens = await session.execute(qs)
     return tokens.scalars().fetchall()
 
 
-async def add_to_blacklist(token: str | Token | List[Token] | List[str], session: AsyncSession):
+async def add_to_blacklist(token: str | TokenModel | List[TokenModel] | List[str], session: AsyncSession):
     if not isinstance(token, list):
         token = [token]
     str_token = []
@@ -140,7 +144,7 @@ async def add_to_blacklist(token: str | Token | List[Token] | List[str], session
     for t in token:
         if isinstance(token, str):
             str_token.append(t)
-        elif isinstance(token, Token):
+        elif isinstance(token, TokenModel):
             model_token.append(t)
         else:
             raise TypeError('token should be string or Token type')
@@ -153,5 +157,6 @@ async def add_to_blacklist(token: str | Token | List[Token] | List[str], session
     session.add_all(model_token)
     await session.commit()
     return model_token if len(model_token) > 1 else model_token[0]
+
 
 

@@ -1,13 +1,17 @@
 from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import contains_eager
 from typing import Optional
 import logging
 
-from schemas.user import UserCreate, UserChangePassword, UserLogin, User
-from exceptions.exceptions import ValidationError
+from schemas.user import UserCreate, UserChangePassword, UserModel
 from schemas.token import ResponseToken
+from schemas.permission import PermissionModel
+from exceptions.exceptions import ValidationError
+
 from db import get_session
 from .token import decode_access_token, create_access_token, oauth2_scheme, create_refresh_token
 from .password import verify_password, get_password_hash
@@ -16,26 +20,33 @@ from .password import verify_password, get_password_hash
 logger = logging.getLogger(__name__)
 
 
-async def get_user_by_username(username: str, session: Optional[AsyncSession] = None) -> User | None:
-    qs = select(User).where(User.username == username).limit(1)
+async def get_user_by_username(username: str, session: Optional[AsyncSession] = None) -> UserModel | None:
+    qs = select(UserModel) \
+            .outerjoin(UserModel.permissions) \
+            .where(UserModel.username == username) \
+            .limit(1) \
+            .options(
+                contains_eager(UserModel.permissions) \
+                .load_only(PermissionModel.perm)
+            )
     user = await session.execute(qs)
-    user = user.scalars().one()
+    user = user.unique().scalars().fetchall()
     if not user:
         return None
-    return user
+    return user[0]
 
 
 async def create_user(
         user: UserCreate,
         raw: bool = False,
         session: Optional[AsyncSession] = None,
-        commit: bool = True) -> User | HTTPException:
+        commit: bool = True) -> UserModel | HTTPException:
     if all([session, not raw]) != any([session, not raw]):
         raise AttributeError("You should pass session or set raw = True")
     if commit and not session:
         raise AttributeError("If commit = True you should pass session")
     hashed_password = get_password_hash(user.password)
-    user = User(username=user.username, password=hashed_password)
+    user = UserModel(username=user.username, password=hashed_password)
     if not raw:
         session.add(user)
     if commit:
@@ -44,7 +55,7 @@ async def create_user(
     return user
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)) -> User:
+async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)) -> UserModel:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -63,22 +74,21 @@ async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSe
     return user
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
+async def get_current_active_user(current_user: UserModel = Depends(get_current_user)):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 
 async def authenticate_user(username: str, password: str, session: AsyncSession):
-    user = await session.execute(select(User).where(User.username == username))
-    user = user.scalars().one_or_none()
+    user = await get_user_by_username(username, session)
     if not user or not verify_password(password, user.password):
         raise ValidationError('Invalid username or password', headers={"WWW-Authenticate": "Bearer"})
     return user
 
 
 async def login_for_access_token(
-        user: UserLogin,
+        user: OAuth2PasswordRequestForm,
         session: AsyncSession) -> ResponseToken:
     user = await authenticate_user(user.username, user.password, session)
     access_token = create_access_token(
@@ -97,7 +107,7 @@ async def login_for_access_token(
     )
 
 
-async def change_password(user: User, passwords: UserChangePassword, session: AsyncSession):
+async def change_password(user: UserModel, passwords: UserChangePassword, session: AsyncSession):
     if not verify_password(passwords.current_password, user.password):
         raise ValidationError({'password': 'Password is invalid'})
     user.password = get_password_hash(passwords.new_password)
