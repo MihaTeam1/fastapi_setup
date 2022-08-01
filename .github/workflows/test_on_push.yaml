@@ -3,15 +3,31 @@ on:
   push:
     branches:
       - '*'
+env:
+  POSTGRES_NAME: test
+
 jobs:
   run_tests:
     runs-on: ubuntu-latest
+    container: python:3.10
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@master
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.10'
-          architecture: 'x64'
+        env:
+          POSTGRES_DSN: postgresql+asyncpg://test:test@db:5432/test
+          SECRET_KEY: qlqoa!99p(h%0-jypb8$#fik*1iz^_6s736sivj#39nher5knd
+          ALLOWED_HOSTS: 127.0.0.1 localhost
+          ORIGINS: http://127.0.0.1 http://localhost
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
       - name: Run tests
