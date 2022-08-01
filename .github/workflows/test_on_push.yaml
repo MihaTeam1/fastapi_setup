@@ -11,7 +11,7 @@ env:
   SECRET_KEY: ${{ secrets.TEST.SECRET_KEY }}
   PG_DSN: ${{ secrets.TEST.PG_DSN }}
   ALLOWED_HOSTS: ${{ secrets.TEST.ALLOWED_HOSTS }}
-  ORIGINS: ${{ secrets.TEST.ORIGINS }}
+  ORIGINS: *["http://127.0.0.1","http://localhost"]*
 
 jobs:
   run_tests:
