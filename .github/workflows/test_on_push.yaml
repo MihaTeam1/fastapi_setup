@@ -29,9 +29,10 @@ jobs:
       - uses: actions/checkout@master
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
-      - name: Unpack envs
-        run: mkdir .env && echo $TEST_ENV_FILE | base64 --decode > .env/test
-      - name: ls
-        run: echo "$TEST_ENV_FILE"
+      env:
+        SECRET_KEY: ${{ secrets.TEST.SECRET_KEY }}
+        PG_DSN: ${{ secrets.TEST.PG_DSN }}
+        ALLOWED_HOSTS: ${{ secrets.TEST.ALLOWED_HOSTS }}
+        ORIGINS: ${{ secrets.TEST.ORIGINS }}
       - name: Run tests
         run: pytest
