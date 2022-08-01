@@ -1,14 +1,14 @@
-import pytest
 import logging
 import asyncio
+import pytest
 
-from tests.conftest import init_db, client, anyio_backend, pytestmark
 from tests.core import router
-from tests.tests_v1.fixtures import token, user
-from utils.auth.password import generate_password, verify_password
+from tests.conftest import init_db, client, user, token, pytestmark
+from v1.utils.auth.password import generate_password
 from schemas.user import UserRead
 from schemas.token import ResponseToken
 from settings import settings
+
 
 logger = logging.getLogger(__name__)
 SEED = getattr(settings, 'secret_key')
@@ -66,7 +66,10 @@ async def test_login_success(client, init_db, user):
     user = user.dict()
     response = await client.post(
         router.url_path_for('v1.login'),
-        json=user
+        data=user,
+        headers={
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
     )
     assert response.status_code == 200
     assert ResponseToken \
@@ -78,8 +81,11 @@ async def test_login_failed(client, init_db, user):
     user = user.dict()
     user['password'] = user['password'] + '#'
     response = await client.post(
-        '/v1/auth/login',
-        json=user
+        router.url_path_for('v1.login'),
+        data=user,
+        headers={
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
     )
     assert response.status_code == 422
     assert response.json()[0]['type'] == 'validation_error'

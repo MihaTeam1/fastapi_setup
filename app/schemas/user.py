@@ -1,13 +1,12 @@
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from pydantic import BaseModel, root_validator
 
-from models.user import UserBase, User, UserBaseWithPassword, Base
+from models.user import UserBase, UserModel, UserBaseWithPassword, Base
 from exceptions import ValidationError
 from settings import settings
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 PASSWORD_VALIDATORS = getattr(settings, 'password_validators')
 
@@ -39,8 +38,9 @@ class UserRead(UserBase, Base):
     pass
 
 
-class UserLogin(UserBaseWithPassword):
-    pass
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
 
 class UserChangePassword(BaseModel):
@@ -71,6 +71,11 @@ class UserChangePassword(BaseModel):
         return values
 
 
-class UserReadWithTokens(UserBase, Base):
-    from .token import TokenRead
+class UserReadWithTokens(UserRead):
+    from schemas.token import TokenRead
     tokens: List[TokenRead] = []
+
+
+class UserReadWithPermissions(UserRead):
+    from schemas.permission import PermissionRead
+    permissions: List[PermissionRead] = []

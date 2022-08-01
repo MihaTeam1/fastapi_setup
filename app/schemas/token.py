@@ -1,13 +1,12 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, validator
 from datetime import datetime
 
-from models.token import Token, TokenBase, Base
+from models.token import TokenModel, TokenBase, Base
 
 
 class RefreshToken(BaseModel):
     refresh_token: str
-    expire_in: Optional[datetime] = None
+    expire_in: datetime | None = None
 
     @property
     def token(self):
@@ -16,7 +15,7 @@ class RefreshToken(BaseModel):
 
 class AccessToken(BaseModel):
     access_token: str
-    expire_in: Optional[datetime] = None
+    expire_in: datetime | None = None
 
     @property
     def token(self):
@@ -24,8 +23,15 @@ class AccessToken(BaseModel):
 
 
 class ResponseToken(RefreshToken, AccessToken):
-    expire_in: datetime
+    refresh_token: str | None = None
+    expire_in: int
     token_type: str
+
+    @validator('expire_in', pre=True)
+    def cast_expire_in(cls, v):
+        if isinstance(v, datetime):
+            return v.timestamp()
+        return v
 
 
 class TokenRead(TokenBase, Base):
@@ -36,8 +42,8 @@ class TokenCreate(TokenBase, Base):
     pass
 
 
-class TokenReadWithUser(TokenRead, Base):
+class TokenReadWithUser(TokenRead):
     from schemas.user import UserRead
-    user: Optional[UserRead] = None
+    user: UserRead | None = None
 
 

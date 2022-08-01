@@ -1,8 +1,14 @@
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, String
-from typing import List, Optional
+from typing import List, TYPE_CHECKING
 
-from .base import UUIDModelBase as Base
+from .base import IDModelBase as Base
+from .register import register
+from .links import GroupUserLink
+
+if TYPE_CHECKING:
+    from .token import TokenModel
+    from .group import GroupModel
 
 
 class UserBase(SQLModel):
@@ -19,10 +25,18 @@ class UserBaseWithPassword(UserBase):
     password: str
 
 
-class User(UserBaseWithPassword, Base, table=True):
+@register
+class UserModel(Base, UserBaseWithPassword, table=True):
     __tablename__ = 'user'
     __table_args__ = {'extend_existing': True}
-    tokens: List['Token'] = Relationship(back_populates='user')
+
+    is_superuser: bool = False
+    tokens: List['TokenModel'] = Relationship(back_populates='user')
+    groups: List['GroupModel'] = Relationship(
+        back_populates='members',
+        link_model=GroupUserLink
+    )
+
 
 
 

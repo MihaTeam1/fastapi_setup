@@ -1,0 +1,1 @@
+from . import test_auth, test_token, test_perm

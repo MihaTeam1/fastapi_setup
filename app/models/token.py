@@ -1,9 +1,12 @@
 from sqlmodel import Field, Relationship, SQLModel
 from datetime import datetime
-from typing import Optional
-from uuid import UUID
+from typing import Optional, TYPE_CHECKING
 
 from .base import UUIDModelBase as Base
+from .register import register
+
+if TYPE_CHECKING:
+    from .user import UserModel
 
 
 class TokenBase(SQLModel):
@@ -12,12 +15,13 @@ class TokenBase(SQLModel):
     )
     is_blacklisted: bool = False
     expire_in: datetime
-    user_id: UUID = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="user.id")
 
 
-class Token(TokenBase, Base, table=True):
+@register
+class TokenModel(TokenBase, Base, table=True):
     __tablename__ = 'token'
-    user: Optional['User'] = Relationship(back_populates='tokens')
+    user: Optional['UserModel'] = Relationship(back_populates='tokens')
 
 
 

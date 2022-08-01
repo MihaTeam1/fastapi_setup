@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlmodel import Field, SQLModel
 
 
-class ModelBase(SQLModel):
+class IDModelBase(SQLModel):
     id: Optional[int] = Field(
                 default=None,
                 primary_key=True,
@@ -29,7 +29,7 @@ class ModelBase(SQLModel):
             ))
 
 
-class UUIDModelBase(ModelBase):
+class UUIDModelBase(IDModelBase):
     id: uuid_pkg.UUID = Field(sa_column=Column(
                 UUID(as_uuid=True),
                 default=uuid_pkg.uuid4,

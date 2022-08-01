@@ -103,7 +103,9 @@ class ASCIIPasswordValidator(BasePasswordValidator):
             last_num = ord(char)
         return password
 
+
 __all__ = [
+    'BasePasswordValidator',
     'MinLengthValidator',
     'SimilarPasswordUsernameValidator',
     'ComparePasswordsValidator',
