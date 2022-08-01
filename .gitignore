@@ -1,7 +1,6 @@
 .venv
 pipfile
 pipfile.lock
-migrations/versions
 .idea
 data
 logs
