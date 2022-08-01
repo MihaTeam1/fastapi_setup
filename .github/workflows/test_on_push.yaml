@@ -4,6 +4,12 @@ on:
     branches:
       - '*'
 
+env:
+  TEST_ENV_FILE: ${{ secrets.TEST }}
+  POSTGRES_DB: ${{ secrets.TEST.POSTGRES_NAME }}
+  POSTGRES_USER: ${{ secrets.TEST.POSTGRES_USER }}
+  POSTGRES_PASSWORD: ${{ secrets.TEST.POSTGRES_PASSWORD }}
+
 jobs:
   run_tests:
     runs-on: ubuntu-latest
@@ -23,5 +29,7 @@ jobs:
       - uses: actions/checkout@master
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
+      - name: Unpack envs
+        run: echo $QA_ENV_FILE | base64 --decode > .env/test
       - name: Run tests
         run: pytest
