@@ -1,1 +1,1 @@
-from . import test_auth, test_token, test_perm
+from .tests_auth import test_token

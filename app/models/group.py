@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List
 
 from .base import IDModelBase as Base
 from .links import GroupUserLink
+from .register import register
 
 if TYPE_CHECKING:
     from .user import UserModel
@@ -15,6 +16,7 @@ class GroupBase(SQLModel):
     })
 
 
+@register
 class GroupModel(Base, GroupBase, table=True):
     __tablename__ = 'group'
 

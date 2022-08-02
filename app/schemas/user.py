@@ -76,6 +76,17 @@ class UserReadWithTokens(UserRead):
     tokens: List[TokenRead] = []
 
 
+class UserReadWithGroups(UserRead):
+    from schemas.group import GroupRead
+    groups: List[GroupRead] = []
+
+
 class UserReadWithPermissions(UserRead):
     from schemas.permission import PermissionRead
     permissions: List[PermissionRead] = []
+
+
+class UserReadWithGroupAndPermission(UserRead):
+    from schemas.group import GroupReadWithPermission
+    groups: List[GroupReadWithPermission] = []
+

@@ -10,7 +10,8 @@ from schemas.user import (
     UserCreate,
     UserChangePassword,
     UserReadWithTokens,
-    UserRead
+    UserRead,
+    UserReadWithGroupAndPermission,
 )
 
 router = APIRouter(prefix='/auth')
@@ -35,7 +36,7 @@ async def change_password_endpoint(
     return await change_password(user, passwords, session)
 
 
-@router.get(path='/current_user', response_model=UserRead, name='v1.current_user')
+@router.get(path='/current_user', response_model=UserReadWithGroupAndPermission, name='v1.current_user')
 async def current_user(user: UserModel = Depends(get_current_user)):
     return user
 

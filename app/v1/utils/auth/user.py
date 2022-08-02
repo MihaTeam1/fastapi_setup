@@ -10,6 +10,7 @@ import logging
 from schemas.user import UserCreate, UserChangePassword, UserModel
 from schemas.token import ResponseToken
 from schemas.permission import PermissionModel
+from schemas.group import GroupModel
 from exceptions.exceptions import ValidationError
 
 from db import get_session
@@ -22,10 +23,15 @@ logger = logging.getLogger(__name__)
 
 async def get_user_by_username(username: str, session: Optional[AsyncSession] = None) -> UserModel | None:
     qs = select(UserModel) \
-            .where(UserModel.username == username) \
-            .limit(1)
+        .outerjoin(UserModel.groups) \
+        .where(UserModel.username == username) \
+        .limit(1) \
+        .options(
+            contains_eager(UserModel.groups).joinedload(GroupModel.permissions)
+        )
     user = await session.execute(qs)
     user = user.unique().scalars().fetchall()
+    print(user)
     if not user:
         return None
     return user[0]

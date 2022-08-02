@@ -1,4 +1,4 @@
-name: Run tests on any Push event
+name: Run tests on pull request to dev or master branches
 on:
   pull_request:
     branches:
@@ -8,8 +8,7 @@ on:
 jobs:
   run_tests:
     runs-on: ubuntu-latest
-    environment: TEST
-    container: python:3.10
+    environment: testing_env
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       PG_DSN: ${{ secrets.PG_DSN }}
@@ -18,6 +17,7 @@ jobs:
     services:
       postgres:
         image: postgres
+        ports: ['5432:5432']
         env:
           POSTGRES_DB: ${{ secrets.POSTGRES_NAME }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -29,7 +29,17 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@master
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
       - name: Install requirements
         run: pip install -r requirements/requirements.txt
       - name: Run tests
         run: pytest
+      - name: Download test logs
+        if: always()
+        uses: actions/upload-artifact@v1
+        with:
+          name: test-results
+          path: logs

@@ -9,6 +9,10 @@ class PermissionCreate(PermissionBase):
     pass
 
 
+class AddPermissionToGroup(PermissionBase):
+    pass
+
+
 class PermissionReadWithUsers(PermissionRead):
     from .user import UserRead
     user: UserRead

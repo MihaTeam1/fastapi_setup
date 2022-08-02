@@ -21,6 +21,7 @@ REFRESH_TOKEN_EXPIRE_MINUTES = getattr(settings, 'refresh_token_expire_minutes')
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/token/login")
 
+
 def _create_token(
         data: dict,
         expires_delta: timedelta | int) -> dict:
@@ -28,7 +29,7 @@ def _create_token(
     if isinstance(expires_delta, int):
         expires_delta = timedelta(minutes=expires_delta)
     expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire.timestamp()})
+    to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return {
         'token': encoded_jwt,
